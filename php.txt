@@ -1,0 +1,72 @@
+<?php
+session_start();
+
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'teacher') {
+    header('Location: login.php');
+    exit;
+}
+
+// Include your PDO db connection
+require_once 'db.php';
+
+// Prepare SQL statement with PDO
+$sql = "SELECT 
+            users.id AS user_id, 
+            users.name, 
+            users.email, 
+            results.course_name, 
+            results.assignment_score, 
+            results.quiz_score, 
+            results.final_grade 
+        FROM results
+        INNER JOIN users ON results.user_id = users.id";
+
+try {
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    die("Query failed: " . $e->getMessage());
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Progress</title>
+    <link rel="stylesheet" href="styles10.css">
+</head>
+<body>
+    <div class="main-content">
+        <h1>Student Progress</h1>
+        <table border="1">
+            <tr>
+                <th>User ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Course</th>
+                <th>Assignment Score</th>
+                <th>Quiz Score</th>
+                <th>Final Grade</th>
+            </tr>
+
+            <?php if (!empty($results)): ?>
+                <?php foreach ($results as $row): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($row['user_id']) ?></td>
+                        <td><?= htmlspecialchars($row['name']) ?></td>
+                        <td><?= htmlspecialchars($row['email']) ?></td>
+                        <td><?= htmlspecialchars($row['course_name']) ?></td>
+                        <td><?= htmlspecialchars($row['assignment_score']) ?></td>
+                        <td><?= htmlspecialchars($row['quiz_score']) ?></td>
+                        <td><?= htmlspecialchars($row['final_grade']) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <tr><td colspan="7">No student progress found.</td></tr>
+            <?php endif; ?>
+        </table>
+    </div>
+</body>
+</html>
